@@ -1,1 +1,5 @@
 .vs
+MiniPascal.Test/obj
+MiniPascal.Test/bin
+MiniPascal/bin
+MiniPascal/obj

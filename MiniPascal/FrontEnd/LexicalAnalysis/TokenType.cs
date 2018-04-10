@@ -8,6 +8,9 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
 {
     public enum TokenType
     {
+        //Value types
+        BOOLEAN, INTEGER, STRING, REAL,
+
         //special symbols 
         PLUS, MINUS, MULT, MOD, EQUALS, NOTEQUALS, LESS, GREATER, LESSOREQUAL, GREATEROREQUAL,
         LEFTCURLY, RIGHTCURLY, LEFTSQUARE, RIGHTSQUARE, DOT, COMMA, SEMICOLON, COLON, 

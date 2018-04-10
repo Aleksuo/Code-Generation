@@ -5,12 +5,12 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniPascal", "MiniPascal\MiniPascal.csproj", "{1A0A5798-DEF3-429B-B101-C2EB07420148}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniPascal.Test", "MiniPascal.Test\MiniPascal.Test.csproj", "{05631559-FECB-45E8-9D90-F8A194603943}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C5DE8279-739A-4C5B-BFD1-0A58A07F758B}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniPascal.Test", "MiniPascal.Test\MiniPascal.Test.csproj", "{D69B13E3-7431-4D79-AF99-1CC3BE9637A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +22,10 @@ Global
 		{1A0A5798-DEF3-429B-B101-C2EB07420148}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A0A5798-DEF3-429B-B101-C2EB07420148}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A0A5798-DEF3-429B-B101-C2EB07420148}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05631559-FECB-45E8-9D90-F8A194603943}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05631559-FECB-45E8-9D90-F8A194603943}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05631559-FECB-45E8-9D90-F8A194603943}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05631559-FECB-45E8-9D90-F8A194603943}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D69B13E3-7431-4D79-AF99-1CC3BE9637A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D69B13E3-7431-4D79-AF99-1CC3BE9637A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D69B13E3-7431-4D79-AF99-1CC3BE9637A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D69B13E3-7431-4D79-AF99-1CC3BE9637A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
