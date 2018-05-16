@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>MiniPascal.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -42,21 +45,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BackEnd\CodeGeneratingVisitor.cs" />
+    <Compile Include="BackEnd\CProgram.cs" />
+    <Compile Include="ErrorHandling\ErrorHook.cs" />
+    <Compile Include="ErrorHandling\ErrorManager.cs" />
+    <Compile Include="ErrorHandling\IHookable.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\BinaryOperandTypeError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\DuplicateDeclarationError.cs" />
+    <Compile Include="ErrorHandling\Messages\IErrorMessage.cs" />
+    <Compile Include="ErrorHandling\Messages\Parser\LexicalError.cs" />
+    <Compile Include="ErrorHandling\Messages\Parser\SyntaxError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\TypeNotSupportedError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\UnaryOperandTypeError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\UndeclaredVariableError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\VarDeclTypeMismatchError.cs" />
+    <Compile Include="FrontEnd\LexicalAnalysis\ILexer.cs" />
     <Compile Include="FrontEnd\LexicalAnalysis\Lexer.cs" />
+    <Compile Include="FrontEnd\LexicalAnalysis\MockLexer.cs" />
     <Compile Include="FrontEnd\LexicalAnalysis\Token.cs" />
     <Compile Include="FrontEnd\LexicalAnalysis\TokenType.cs" />
+    <Compile Include="FrontEnd\Parsing\Parser.cs" />
+    <Compile Include="FrontEnd\SemanticAnalysis\SymbolTableBuildingVisitor.cs" />
+    <Compile Include="FrontEnd\SemanticAnalysis\TypeCheckingVisitor.cs" />
+    <Compile Include="Utils\AST.cs" />
+    <Compile Include="Utils\NodeVisitor.cs" />
+    <Compile Include="Utils\Source\FileSource.cs" />
+    <Compile Include="Utils\Source\ISource.cs" />
+    <Compile Include="Utils\Source\StringSource.cs" />
+    <Compile Include="Utils\SymbolTable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="TestPrograms\test.mpas" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="BackEnd\" />
-    <Folder Include="FrontEnd\Parsing\" />
-    <Folder Include="FrontEnd\SemanticAnalysis\" />
-    <Folder Include="FrontEnd\Utils\Source\" />
+    <Folder Include="Output\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

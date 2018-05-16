@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace MiniPascal.FrontEnd.LexicalAnalysis
 {
+#pragma warning disable CS0659 // 'Position' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     public class Position
+#pragma warning restore CS0659 // 'Position' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         public int row;
         public int col;
@@ -15,9 +17,26 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
             this.row = row;
             this.col = col;
         }
+
+        public override bool Equals(object obj)
+        {
+
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            Position p = (Position)obj;
+            return (this.row == p.row) && (this.col == p.col);
+        }
+
+        public override string ToString()
+        {
+            return "(" + row + "," + col + ")";
+        }
     }
 
+#pragma warning disable CS0659 // 'Token' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     public class Token
+#pragma warning restore CS0659 // 'Token' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         public TokenType type;
         public string lexeme;
@@ -39,9 +58,29 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
             this.pos = null;
         }
 
-        public string toString()
+        public override bool Equals(object obj) {
+
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            Token t = (Token)obj;
+            bool posEqual = false;
+            if(this.pos != null)
+            {
+                posEqual = this.pos.Equals(t.pos);
+            }else if(t.pos == null)
+            {
+                posEqual = true;
+            }
+            
+            return posEqual && (this.type == t.type) && (this.lexeme == t.lexeme);
+        }
+
+        public override string ToString()
         {
-            return "( " + this.type.ToString() + ", " + this.lexeme + " )";
+            return "(" + type + ", " + lexeme + ")" + pos;
         }
     }
 }

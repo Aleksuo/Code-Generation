@@ -3,3 +3,8 @@ MiniPascal.Test/obj
 MiniPascal.Test/bin
 MiniPascal/bin
 MiniPascal/obj
+Output
+.axoCover
+MiniPascal/MiniPascal.exe
+MiniPascal/MiniPascal.exe.config
+MiniPascal/MiniPascal.pdb

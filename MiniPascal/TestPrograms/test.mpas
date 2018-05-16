@@ -1,0 +1,7 @@
+﻿program test;
+
+begin
+	begin
+		var newVar, newVar, anotherVar : Boolean;
+	end
+end.
