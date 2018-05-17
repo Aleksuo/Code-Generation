@@ -4,21 +4,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MiniPascal.Utils;
+using MiniPascal.ErrorHandling;
+using MiniPascal.ErrorHandling.Messages;
 
 namespace MiniPascal.FrontEnd.SemanticAnalysis
 {
     using SymbolTables = System.Collections.Generic.Dictionary<Tuple<string, int>, SymbolTable>;
     using Key = System.Tuple<string, int>;
 
-    public class SymbolTableBuildingVisitor : NodeVisitor
+    public class SymbolTableBuildingVisitor : NodeVisitor, IHookable
     {
         public SymbolTables symbolTables;
         SymbolTable currentTable;
+
+        public ErrorHook hook { get; set; }
 
         public SymbolTableBuildingVisitor()
         {
             this.symbolTables = new SymbolTables();
             this.currentTable = null;
+            this.hook = new ErrorHook();
         }
 
 
@@ -75,7 +80,7 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
                 }
                 else
                 {
-                    Console.WriteLine("Duplicate error here");
+                    this.ThrowErrorMessage(new DuplicateDeclarationError(nodes[i].token));
                 }
             }
         }

@@ -5,17 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 using MiniPascal.FrontEnd.LexicalAnalysis;
 using MiniPascal.Utils;
+using MiniPascal.ErrorHandling;
+using MiniPascal.ErrorHandling.Messages;
 
 namespace MiniPascal.FrontEnd.Parsing
 {
-    public class Parser
+    public class Parser: IHookable
     {
         private ILexer lexer;
         private Token currentToken;
+
+        public ErrorHook hook { get; set; }
+
         public Parser(ILexer lexer)
         {
             this.lexer = lexer;
             this.currentToken = this.lexer.nextToken();
+            this.hook = new ErrorHook();
         }
 
         private void eatToken(TokenType expected)
@@ -29,7 +35,8 @@ namespace MiniPascal.FrontEnd.Parsing
             }
             else
             {
-                Console.WriteLine("Expected: " + expected.ToString() + " Found: " + curType.ToString());
+                this.ThrowErrorMessage(new SyntaxError(this.currentToken));
+                this.currentToken = this.lexer.nextToken();
             }
         }
 
@@ -174,7 +181,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 //todo: conditional return
                 //<return statement> ::= "return" [<expr>] 
                 this.eatToken(TokenType.RETURN);
-                if(this.currentToken.type != (TokenType.SEMICOLON | TokenType.END))
+                if(this.currentToken.type != TokenType.SEMICOLON || this.currentToken.type != TokenType.END)
                 {
                     nodes.Add(this.expr());
                 }              
@@ -335,10 +342,11 @@ namespace MiniPascal.FrontEnd.Parsing
             List<AST> nodes = new List<AST>();
             AST simple = this.simple_expr();
             nodes.Add(simple);
-            if(this.currentToken.type == (TokenType.EQUALS | TokenType.GREATER | TokenType.GREATEROREQUAL 
-                | TokenType.LESS | TokenType.LESSOREQUAL | TokenType.NOTEQUAL))
+            TokenType type = this.currentToken.type;
+            if(type == TokenType.EQUALS || type == TokenType.GREATER || type == TokenType.GREATEROREQUAL 
+                || type == TokenType.LESS || type == TokenType.LESSOREQUAL || type == TokenType.NOTEQUAL)
             {
-                TokenType type = this.currentToken.type;
+                type = this.currentToken.type;
                 Token cur = this.currentToken;
                 if(type == TokenType.EQUALS)
                 {
@@ -373,7 +381,7 @@ namespace MiniPascal.FrontEnd.Parsing
             TokenType type = this.currentToken.type;
             Token cur = this.currentToken;
             List<AST> nodes = new List<AST>();
-            if (type == (TokenType.PLUS | TokenType.MINUS))
+            if (type == TokenType.PLUS || type == TokenType.MINUS)
             {
                 // <sign><term>...
                 if(type == TokenType.PLUS)
@@ -392,14 +400,14 @@ namespace MiniPascal.FrontEnd.Parsing
             }
             type = this.currentToken.type;
             cur = this.currentToken;
-            if (type != (TokenType.PLUS | TokenType.MINUS | TokenType.OR))
+            if (type != TokenType.PLUS || type != TokenType.MINUS ||type != TokenType.OR)
             {
                 return nodes[0];
             }
             AST node = null;
             while (true)
             {
-                if(type == (TokenType.PLUS | TokenType.MINUS | TokenType.OR))
+                if(type == TokenType.PLUS || type == TokenType.MINUS || type == TokenType.OR)
                 {
                     type = this.currentToken.type;
                     cur = this.currentToken;
@@ -440,7 +448,7 @@ namespace MiniPascal.FrontEnd.Parsing
             {
                 type = this.currentToken.type;
                 cur = this.currentToken;
-                if (type == (TokenType.MULT | TokenType.DIV | TokenType.MOD | TokenType.AND))
+                if (type == TokenType.MULT || type == TokenType.DIV || type == TokenType.MOD ||type == TokenType.AND)
                 {
                     this.eatToken(type);
                 }

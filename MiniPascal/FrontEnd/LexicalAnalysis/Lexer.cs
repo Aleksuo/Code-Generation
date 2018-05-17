@@ -17,6 +17,8 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
         private Dictionary<char, Token> oneCharTokens;
         private Dictionary<string, Token> keywords;
 
+
+
         public Lexer(ISource input)
         {
             this.input = input;
