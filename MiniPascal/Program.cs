@@ -27,7 +27,11 @@ namespace MiniPascal
 
             SymbolTableBuildingVisitor tableBuilder = new SymbolTableBuildingVisitor();
             tableBuilder.HookTo(em);
-            tableBuilder.buildTables(program);
+            SymbolTableManager stm = tableBuilder.buildTables(program);
+
+            IdentifierUsageCheckingVisitor idChecker = new IdentifierUsageCheckingVisitor(stm);
+            idChecker.HookTo(em);
+            idChecker.check(program);
 
             if (!em.areErrors())
             {

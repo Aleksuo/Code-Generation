@@ -400,17 +400,18 @@ namespace MiniPascal.FrontEnd.Parsing
             }
             type = this.currentToken.type;
             cur = this.currentToken;
-            if (type != TokenType.PLUS || type != TokenType.MINUS ||type != TokenType.OR)
+            if (type != TokenType.PLUS && type != TokenType.MINUS && type != TokenType.OR)
             {
                 return nodes[0];
             }
             AST node = null;
             while (true)
             {
-                if(type == TokenType.PLUS || type == TokenType.MINUS || type == TokenType.OR)
+                type = this.currentToken.type;
+                cur = this.currentToken;
+                if (type == TokenType.PLUS || type == TokenType.MINUS || type == TokenType.OR)
                 {
-                    type = this.currentToken.type;
-                    cur = this.currentToken;
+                   
                     if (type == TokenType.PLUS)
                     {
                         this.eatToken(TokenType.PLUS);
@@ -438,11 +439,11 @@ namespace MiniPascal.FrontEnd.Parsing
         private AST term()
         {
             //<term> ::= <factor>{<multiplying operator> <factor>>
+            
+            List<AST> nodes = new List<AST>();
+            AST node = this.factor();
             TokenType type = this.currentToken.type;
             Token cur = this.currentToken;
-            List<AST> nodes = new List<AST>();
-
-            AST node = this.factor();
             nodes.Add(node);
             while (true)
             {
@@ -474,8 +475,9 @@ namespace MiniPascal.FrontEnd.Parsing
             if(type == TokenType.ID)
             {
                 nodes.Add(this.id());
-                this.eatToken(TokenType.ID);
+                //this.eatToken(TokenType.ID);
                 //<call> ::= <id> "(" <arguments> ")"
+                type = this.currentToken.type;
                 if (type == TokenType.LEFTBRACKET)
                 {
                     this.eatToken(TokenType.LEFTBRACKET);
@@ -484,7 +486,7 @@ namespace MiniPascal.FrontEnd.Parsing
                     return new Call(nodes);
                 }
                 //<variable> ::= <variable id> ["["<integer expr>"]"]
-                type = this.currentToken.type;
+              
                 if(type == TokenType.LEFTSQUARE)
                 {
                     this.eatToken(TokenType.LEFTSQUARE);
@@ -584,7 +586,46 @@ namespace MiniPascal.FrontEnd.Parsing
 
         private AST parameters()
         {
-            return null;
+            TokenType type = this.currentToken.type;
+            Token cur = this.currentToken;
+            List<AST> nodes = new List<AST>();
+            if(type == TokenType.RIGHTBRACKET)
+            {
+                return null;
+            }
+
+            while (true)
+            {
+                
+                if(type == TokenType.VAR)
+                {
+                    List<AST> refNodes = new List<AST>();
+                    this.eatToken(TokenType.VAR);
+                    refNodes.Add(this.id());
+                    this.eatToken(TokenType.COLON);
+                    refNodes.Add(this.type());
+                    nodes.Add(new Reference(refNodes));
+                }
+                else
+                {
+                    List<AST> paramNodes = new List<AST>();
+                    paramNodes.Add(this.id());
+                    this.eatToken(TokenType.COLON);
+                    paramNodes.Add(this.type());
+                    nodes.Add(new Parameter(paramNodes));
+                }
+                if(this.currentToken.type == TokenType.COMMA)
+                {
+                    this.eatToken(TokenType.COMMA);
+                    type = this.currentToken.type;
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+            return new Parameters(nodes);
         }
 
         

@@ -9,8 +9,8 @@ using MiniPascal.ErrorHandling.Messages;
 
 namespace MiniPascal.FrontEnd.SemanticAnalysis
 {
-    using SymbolTables = System.Collections.Generic.Dictionary<Tuple<string, int>, SymbolTable>;
-    using Key = System.Tuple<string, int>;
+    using SymbolTables = System.Collections.Generic.Dictionary<Tuple<string, int, int>, SymbolTable>;
+    using Key = System.Tuple<string, int, int>;
 
     public class SymbolTableBuildingVisitor : NodeVisitor, IHookable
     {
@@ -29,43 +29,116 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
 
         public void visit_PascalProgram(AST node)
         {
-            Console.WriteLine("Start global scope");
+            //Console.WriteLine("Start global scope");
             this.currentTable = new SymbolTable("global", 1, null);
             this.currentTable.baseScope = this.currentTable;
-            Key key = new Key("global", 1);
+            Key key = new Key("global", 1, node.nodeID);
             symbolTables[key]=this.currentTable;
-            foreach(AST n in node.nodes)
+            for(int i = 1; i<node.nodes.Count(); i++)
             {
-                this.visit(n);
+                this.visit(node.nodes[i]);
             }
-
-            Console.WriteLine("End global scope");
+            this.exitCurrentScope();
+            //Console.WriteLine("End global scope");
         }
 
         public void visit_MainBlock(AST node)
         {
-            Console.WriteLine("Enter main scope");
+            //Console.WriteLine("Enter main scope");
             string scopeName = "main";
             int scopeLevel = this.currentTable.scopeLevel + 1;
-            this.EnterNewScope(scopeName, scopeLevel);
-            foreach(AST n in node.nodes)
-            {
-                this.visit(n);
-            }
+            this.enterNewScope(scopeName, scopeLevel, node.nodeID);
+            this.visitAll(node);
             this.currentTable = this.currentTable.baseScope;
+            this.exitCurrentScope();
         }
 
         public void visit_Block(AST node)
         {
             string scopeName = this.currentTable.name;
             int scopeLevel = this.currentTable.scopeLevel + 1;
-            this.EnterNewScope(scopeName, scopeLevel);
+            this.enterNewScope(scopeName, scopeLevel, node.nodeID);
+            this.visitAll(node);
+            this.currentTable = this.currentTable.baseScope;
+        }
+
+        public void visit_Procedure(AST node)
+        {
+            string name = node.nodes[0].token.lexeme;
+            int scopeLevel = this.currentTable.scopeLevel + 1;
+            if(this.currentTable.lookup(name) == null)
+            {
+                this.currentTable.define(new ProcedureSymbol(name, BuiltType.NONE, Category.PROCEDURE, this.parameterListGenerator(node)));
+            }
+            else
+            {
+                this.ThrowErrorMessage(new DuplicateDeclarationError(node.nodes[0].token));
+            }
+
+            //link parameters to procedure symbol here
+            this.enterNewScope(name, scopeLevel, node.nodeID);
+            this.visit(node.nodes[2]);
+            this.exitCurrentScope();
+        }
+
+        public void visit_Function(AST node)
+        {
+            string name = node.nodes[0].token.lexeme;
+            BuiltType type = this.currentTable.lookType(node.nodes[2].token.lexeme);
+            if(this.currentTable.lookup(name) == null)
+            {   
+                this.currentTable.define(new FunctionSymbol(name, type, Category.FUNCTION, this.parameterListGenerator(node)));
+            }
+            else
+            {
+                this.ThrowErrorMessage(new DuplicateDeclarationError(node.nodes[0].token));
+            }
+            //parameters here
+            this.enterNewScope(name, this.currentTable.scopeLevel + 1, node.nodeID);
+            this.visit(node.nodes[3]);
+        }
+
+        private List<Symbol> parameterListGenerator(AST node)
+        {
+            List<Symbol> paramList = new List<Symbol>();
+            AST parameters = node.nodes[1];
+            if (parameters != null)
+            {
+                foreach (AST n in parameters.nodes)
+                {
+                    string parName = n.nodes[0].token.lexeme;
+                    BuiltType parType = this.currentTable.lookType(n.nodes[1].token.lexeme);
+                    if (n is Parameter)
+                    {
+                        paramList.Add(new Symbol(parName, parType, Category.PARAMETER));
+                    }else  if(n is Reference)
+                    {
+                        paramList.Add(new Symbol(parName, parType, Category.REFERENCE));
+                    }
+                }
+            }
+            return paramList;
+        }
+        public void visit_While(AST node)
+        {
+            this.enterNewScope(this.currentTable.name, this.currentTable.scopeLevel + 1, node.nodeID);
             foreach(AST n in node.nodes)
             {
                 this.visit(n);
             }
-            this.currentTable = this.currentTable.baseScope;
+            this.exitCurrentScope();
         }
+
+        public void visit_If(AST node)
+        {
+            this.enterNewScope(this.currentTable.name, this.currentTable.scopeLevel + 1, node.nodeID);
+            foreach(AST n in node.nodes)
+            {
+                this.visit(n);
+            }
+            this.exitCurrentScope();
+        }
+
 
         public void visit_VarDeclaration(AST node)
         {
@@ -74,9 +147,10 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
             for(int i = 0; i<nodes.Count-1; i++)
             {
                 string name = nodes[i].token.lexeme;
-                if(this.currentTable.lookup(nodes[i].token.lexeme) == null)
+                //check if current scope has duplicates or if enclosing function/procedure has clashing parameters
+                if(this.currentTable.lookupOnlyThisScope(name) == null && this.currentTable.lookupInEnclosingProcedureOrFunction(name) == null)
                 {
-                    this.currentTable.define(new Symbol(name, type));
+                    this.currentTable.define(new Symbol(name, type, Category.VARIABLE));
                 }
                 else
                 {
@@ -85,17 +159,88 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
             }
         }
 
-        private void EnterNewScope(string scopeName, int scopeLevel)
+        public void visit_Assignment(AST node)
         {
-            Key key = new Key(scopeName, scopeLevel);
+            visitAll(node);
+        }
+
+        public void visit_Identifier(AST node)
+        {
+            /*
+            string name = node.token.lexeme;
+            if(this.currentTable.lookup(name) == null)
+            {
+                this.ThrowErrorMessage(new UndeclaredVariableError(node.token));
+            }
+            */
+        }
+
+        public void visit_RelationalOp(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_AddingOp(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_MultiplyingOp(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_UnaryOp(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_Return(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_Write(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_Read(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_Assert(AST node)
+        {
+            visitAll(node);
+        }
+
+        public void visit_Variable(AST node)
+        {}
+
+        private void visitAll(AST node)
+        {
+            foreach (AST n in node.nodes)
+            {
+                this.visit(n);
+            }
+        }
+        private void enterNewScope(string scopeName, int scopeLevel, int id)
+        {
+            Key key = new Key(scopeName, scopeLevel, id);
             SymbolTable newTable = new SymbolTable(scopeName, scopeLevel, this.currentTable);
             symbolTables[key] = newTable;
             this.currentTable = newTable;
         }
-        public SymbolTables buildTables(AST program)
+
+        private void exitCurrentScope()
+        {
+            this.currentTable = this.currentTable.baseScope;
+        }
+        public SymbolTableManager buildTables(AST program)
         {
             this.visit(program);
-            return this.symbolTables;
+            return new SymbolTableManager(this.symbolTables);
         }
     }
 }

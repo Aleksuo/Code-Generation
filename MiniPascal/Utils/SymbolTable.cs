@@ -8,23 +8,50 @@ namespace MiniPascal.Utils
 {
     public enum BuiltType
     {
-        INTEGER, STRING, BOOLEAN, ERROR, REAL
+        INTEGER, STRING, BOOLEAN, ERROR, REAL, NONE
+    }
+
+    public enum Category
+    {
+        FUNCTION, PROCEDURE, VARIABLE, PARAMETER, REFERENCE
     }
     public class Symbol {
         public string var;
         public BuiltType type;
-        public Symbol(string var, BuiltType type)
+        public Category category;
+
+        public Symbol(string var, BuiltType type, Category category)
         {
             this.var = var;
             this.type = type;
+            this.category = category;
         }
 
         override
         public string ToString()
         {
-            return "(VARIABLE: " + var + ",TYPE: " + type.ToString()+")";
+            return "(VARIABLE: " + var + ",TYPE: " + type.ToString()+", CATEGORY: "+category+")";
         }
     }
+
+    public class ProcedureSymbol : Symbol
+    {
+        public List<Symbol> parameters;
+        public ProcedureSymbol(string var, BuiltType type, Category category, List<Symbol> parameters) : base(var, type, category)
+        {
+            this.parameters = parameters;
+        }
+    }
+
+    public class FunctionSymbol : Symbol
+    {
+        public List<Symbol> parameters;
+        public FunctionSymbol(string var, BuiltType type , Category category, List<Symbol> parameters) : base(var, type, category)
+        {
+            this.parameters = parameters;
+        }
+    }
+   
 
     public class SymbolTable
     {
@@ -64,13 +91,65 @@ namespace MiniPascal.Utils
             return this.types[type];
         }
 
+        public Symbol lookupOnlyThisScope(string name)
+        {
+            if (symbols.ContainsKey(name))
+            {
+                return this.symbols[name];
+            }
+            return null;
+        }
+
         public Symbol lookup(string name)
         {
             if (symbols.ContainsKey(name))
             {
                 return this.symbols[name];
             }
-            return null;           
+            else if (this == this.baseScope && !symbols.ContainsKey(name))
+            {
+                return null;
+            }
+            return this.baseScope.lookup(name);
+        }
+
+        public Symbol lookupInEnclosingProcedureOrFunction(string symbolName)
+        {
+            Symbol funcOrProc = lookup(this.name);
+            if(funcOrProc == null)
+            {
+                return null;
+            }
+            if(funcOrProc.category == Category.PROCEDURE)
+            {
+                ProcedureSymbol cast = (ProcedureSymbol)funcOrProc;
+                foreach (Symbol s in cast.parameters)
+                {
+                    if(s.var == symbolName)
+                    {
+                        return s;
+                    }
+                }
+            }
+            else
+            {
+                FunctionSymbol cast = (FunctionSymbol)funcOrProc;
+                foreach (Symbol s in cast.parameters)
+                {
+                    if (s.var == symbolName)
+                    {
+                        return s;
+                    }
+                }
+            }
+           
+            return null;
+        }
+
+        public override bool Equals(object obj)
+        {
+            SymbolTable other = (SymbolTable)obj;
+            return ((this.name == other.name) && (this.scopeLevel == other.scopeLevel));
         }
     }
 }

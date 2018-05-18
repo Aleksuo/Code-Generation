@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MiniPascal.FrontEnd.LexicalAnalysis;
 
@@ -11,13 +12,17 @@ namespace MiniPascal.Utils
     {
         public Token token;
         public List<AST> nodes;
+        public int nodeID;
 
         public BuiltType type;
+
+        private static int globalNodeID;
 
         public AST(List<AST> nodes, Token token)
         {
             this.token = token;
             this.nodes = nodes;
+            this.nodeID = Interlocked.Increment(ref globalNodeID);
         }
     }
 
@@ -154,6 +159,21 @@ namespace MiniPascal.Utils
     public class UnaryOp : AST
     {
         public UnaryOp(List<AST> nodes, Token token) : base(nodes, token) { }
+    }
+
+    public class Parameters : AST
+    {
+        public Parameters(List<AST> nodes) : base(nodes, null) { }
+    }
+
+    public class Parameter : AST
+    {
+        public Parameter(List<AST> nodes) : base(nodes, null) { }
+    }
+
+    public class Reference : AST
+    {
+        public Reference(List<AST> nodes) : base(nodes, null) { }
     }
 
 
