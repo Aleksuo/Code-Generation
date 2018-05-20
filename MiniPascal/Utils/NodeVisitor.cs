@@ -15,7 +15,7 @@ namespace MiniPascal.Utils
             if(node != null)
             {
                 MethodInfo mi = this.GetType().GetMethod("visit_" + node.GetType().Name);
-                Console.WriteLine(mi);
+                //Console.WriteLine(mi);
                 if (mi == null)
                 {
                     return null;

@@ -1,0 +1,9 @@
+﻿Program binaryoperror;
+begin	
+	var test : Boolean;
+	var test2 : integer;
+	test := true;
+	test2 := 2;
+	var test3 : integer;
+	test3 := test * test2;
+end.

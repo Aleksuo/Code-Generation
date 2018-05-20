@@ -47,14 +47,14 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
 
         public void visit_Procedure(AST node)
         {
-            this.stm.enterScope(node.nodes[0].token.lexeme, stm.currentTable.scopeLevel + 1, node.nodeID);
+            this.stm.enterScope(node.nodes[0].token.lexeme, stm.currentTable.scopeLevel, node.nodeID);
             this.visit(node.nodes[2]);
             this.stm.exitScope();
         }
 
         public void visit_Function(AST node)
         {
-            this.stm.enterScope(node.nodes[0].token.lexeme, stm.currentTable.scopeLevel + 1, node.nodeID);
+            this.stm.enterScope(node.nodes[0].token.lexeme, stm.currentTable.scopeLevel, node.nodeID);
             this.visit(node.nodes[3]);
             this.stm.exitScope();
         }
@@ -153,6 +153,8 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
                 this.ThrowErrorMessage(new UndeclaredVariableError(node.token));
             }
         }
+
+        public void visit_Error(AST node) { }
 
         public void visitAll(AST node)
         {

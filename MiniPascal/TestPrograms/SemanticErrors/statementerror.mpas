@@ -1,0 +1,7 @@
+﻿Program statementerror;
+begin
+	var test, test2 : integer;
+	test := 1;
+	if test then
+		test2 := 2;
+end.

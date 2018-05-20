@@ -1,0 +1,10 @@
+﻿Program lexerror;
+
+
+begin
+	begin
+		var test : Boolean;
+		test := true;
+		assert(test != false);
+	end
+end.

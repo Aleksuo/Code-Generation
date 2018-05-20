@@ -15,6 +15,8 @@ namespace MiniPascal.FrontEnd.Parsing
         private ILexer lexer;
         private Token currentToken;
 
+        private bool panic;
+
         public ErrorHook hook { get; set; }
 
         public Parser(ILexer lexer)
@@ -22,21 +24,57 @@ namespace MiniPascal.FrontEnd.Parsing
             this.lexer = lexer;
             this.currentToken = this.lexer.nextToken();
             this.hook = new ErrorHook();
+            this.panic = false;
+        }
+
+        public AST checkStatus(AST node)
+        {
+            if (panic)
+            {
+                return new Error();
+            }
+            return node;
+        }
+
+        public void enterPanicMode()
+        {
+            this.panic = true;
+            TokenType cur = this.currentToken.type;
+            while (cur != TokenType.SEMICOLON && cur != TokenType.EOF && cur != TokenType.END)
+            {
+                this.currentToken = this.lexer.nextToken();
+                cur = this.currentToken.type;
+            }
         }
 
         private void eatToken(TokenType expected)
         {
             TokenType curType = this.currentToken.type;
-            Console.WriteLine(this.currentToken);
+            //Console.WriteLine(this.currentToken);
+            if(panic && expected == curType)
+            {
+                this.panic = false;
+            }
+            if (panic)
+                return;
+
             if(curType == expected)
             {
-                Console.WriteLine("Parsed: " + this.currentToken);
+                //Console.WriteLine("Parsed: " + this.currentToken);
                 this.currentToken = this.lexer.nextToken();
             }
             else
             {
-                this.ThrowErrorMessage(new SyntaxError(this.currentToken));
-                this.currentToken = this.lexer.nextToken();
+                if(curType == TokenType.ERROR)
+                {
+                    this.ThrowErrorMessage(new LexicalError(this.currentToken));
+                }
+                else
+                {
+                    this.ThrowErrorMessage(new SyntaxError(this.currentToken));
+                }
+                this.enterPanicMode();
+                //Console.WriteLine("Expected: " + expected);
             }
         }
 
@@ -64,7 +102,7 @@ namespace MiniPascal.FrontEnd.Parsing
             }
             nodes.Add(this.block(true));
             this.eatToken(TokenType.DOT);
-            return new Utils.PascalProgram(nodes, token);
+            return this.checkStatus(new Utils.PascalProgram(nodes, token));
         }
 
         private AST procedure()
@@ -81,7 +119,7 @@ namespace MiniPascal.FrontEnd.Parsing
             this.eatToken(TokenType.SEMICOLON);
             nodes.Add(this.block(false));
             this.eatToken(TokenType.SEMICOLON);
-            return new Procedure(nodes,cur);
+            return this.checkStatus(new Procedure(nodes,cur));
         }
 
         private AST function()
@@ -100,7 +138,7 @@ namespace MiniPascal.FrontEnd.Parsing
             this.eatToken(TokenType.SEMICOLON);
             nodes.Add(this.block(false));
             this.eatToken(TokenType.SEMICOLON);
-            return new Function(nodes,cur);
+            return this.checkStatus(new Function(nodes,cur));
         }
 
         private AST block(bool main)
@@ -127,9 +165,9 @@ namespace MiniPascal.FrontEnd.Parsing
             this.eatToken(TokenType.END);
             if (main)
             {
-                return new MainBlock(nodes);
+                return this.checkStatus(new MainBlock(nodes));
             }
-            return new Block(nodes);
+            return this.checkStatus(new Block(nodes));
         }
 
         private AST statement()
@@ -141,15 +179,15 @@ namespace MiniPascal.FrontEnd.Parsing
                 || type == TokenType.READ || type == TokenType.WRITELN || type == TokenType.ASSERT)
             {
                 //<statement>  ::= <simple statement>
-                return this.simple_statement();
+                return this.checkStatus(this.simple_statement());
             }
             else if(type == TokenType.BEGIN || type == TokenType.IF || type == TokenType.WHILE)
             {
                 //<statement> ::= <structured statement>
-                return this.structured_statement();
+                return this.checkStatus(this.structured_statement());
             }
             //<statement> ::= <var declaration>
-            return this.var_declaration();
+            return this.checkStatus(this.var_declaration());
         }
 
         private AST simple_statement()
@@ -167,14 +205,14 @@ namespace MiniPascal.FrontEnd.Parsing
                     this.eatToken(TokenType.LEFTBRACKET);
                     nodes.Add(this.arguments());
                     this.eatToken(TokenType.RIGHTBRACKET);
-                    return new Call(nodes);
+                    return this.checkStatus(new Call(nodes));
                 }
                 //<assignment statement> ::= <variable> ":=" <expr> 
                 cur = this.currentToken;
                 this.eatToken(TokenType.ASSIGN);
                 nodes.Add(this.expr());
-                this.eatToken(TokenType.SEMICOLON);
-                return new Assignment(nodes, cur);
+                //this.eatToken(TokenType.SEMICOLON);
+                return this.checkStatus(new Assignment(nodes, cur));
             }
             else if (type == TokenType.RETURN)
             {
@@ -185,7 +223,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 {
                     nodes.Add(this.expr());
                 }              
-                return new Return(nodes, cur);
+                return this.checkStatus(new Return(nodes, cur));
             }
             else if (type == TokenType.READ)
             {
@@ -204,8 +242,8 @@ namespace MiniPascal.FrontEnd.Parsing
                         break;
                     }
                 }
-                this.eatToken(TokenType.LEFTBRACKET);
-                return new Read(nodes, cur);
+                this.eatToken(TokenType.RIGHTBRACKET);
+                return this.checkStatus(new Read(nodes, cur));
             }
             else if (type == TokenType.WRITELN)
             {
@@ -213,8 +251,8 @@ namespace MiniPascal.FrontEnd.Parsing
                 this.eatToken(TokenType.WRITELN);
                 this.eatToken(TokenType.LEFTBRACKET);
                 nodes.Add(this.arguments());
-                this.eatToken(TokenType.LEFTBRACKET);
-                return new Write(nodes, cur);
+                this.eatToken(TokenType.RIGHTBRACKET);
+                return this.checkStatus(new Write(nodes, cur));
             }
             else
             {
@@ -223,7 +261,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 this.eatToken(TokenType.LEFTBRACKET);
                 nodes.Add(this.expr());
                 this.eatToken(TokenType.RIGHTBRACKET);
-                return new Assert(nodes, cur);
+                return this.checkStatus(new Assert(nodes, cur));
             }
         }
         private AST structured_statement()
@@ -233,17 +271,17 @@ namespace MiniPascal.FrontEnd.Parsing
             if (type == TokenType.BEGIN)
             {
                 //<structure statement> ::= <block>
-                return this.block(false);
+                return this.checkStatus(this.block(false));
             }
             else if (type == TokenType.IF)
             {
                 //<structured statement> ::= <if statement>
-                return this.if_statement();
+                return this.checkStatus(this.if_statement());
             }
             else
             {
                 //<structured statement> ::= <while statement>
-                return this.while_statement();
+                return this.checkStatus(this.while_statement());
             }
         }
 
@@ -266,7 +304,7 @@ namespace MiniPascal.FrontEnd.Parsing
             }
             this.eatToken(TokenType.COLON);
             nodes.Add(this.type());
-            return new VarDeclaration(nodes, cur);
+            return this.checkStatus(new VarDeclaration(nodes, cur));
         }
 
         private AST type()
@@ -275,10 +313,10 @@ namespace MiniPascal.FrontEnd.Parsing
             TokenType type = this.currentToken.type;
             if(type == TokenType.TYPE)
             {
-                return this.simple_type();
+                return this.checkStatus(this.simple_type());
             }
             //<type> ::= <array type>
-            return this.array_type();
+            return this.checkStatus(this.array_type());
         }
 
         private AST simple_type()
@@ -286,7 +324,7 @@ namespace MiniPascal.FrontEnd.Parsing
             TokenType type = this.currentToken.type;
             Token cur = this.currentToken;
             this.eatToken(TokenType.TYPE);
-            return new Utils.Type(cur);
+            return this.checkStatus(new Utils.Type(cur));
         }
 
         private AST array_type()
@@ -303,7 +341,7 @@ namespace MiniPascal.FrontEnd.Parsing
             this.eatToken(TokenType.RIGHTSQUARE);
             this.eatToken(TokenType.OF);
             nodes.Add(this.simple_type());
-            return new Utils.Array(nodes, cur);
+            return this.checkStatus(new Utils.Array(nodes, cur));
         }
 
 
@@ -321,7 +359,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 this.eatToken(TokenType.ELSE);
                 nodes.Add(this.statement());
             }
-            return new If(nodes, cur);
+            return this.checkStatus(new If(nodes, cur));
         }
 
         private AST while_statement()
@@ -334,7 +372,7 @@ namespace MiniPascal.FrontEnd.Parsing
             nodes.Add(this.expr());
             this.eatToken(TokenType.DO);
             nodes.Add(this.statement());
-            return new While(nodes,cur);
+            return this.checkStatus(new While(nodes,cur));
         }
 
         private AST expr()
@@ -369,9 +407,9 @@ namespace MiniPascal.FrontEnd.Parsing
                     this.eatToken(TokenType.NOTEQUAL);
                 }
                 nodes.Add(this.simple_expr());
-                return new RelationalOp(nodes, cur);
+                return this.checkStatus(new RelationalOp(nodes, cur));
             }
-            return simple;
+            return this.checkStatus(simple);
         }
 
         private AST simple_expr() { 
@@ -402,7 +440,7 @@ namespace MiniPascal.FrontEnd.Parsing
             cur = this.currentToken;
             if (type != TokenType.PLUS && type != TokenType.MINUS && type != TokenType.OR)
             {
-                return nodes[0];
+                return this.checkStatus(nodes[0]);
             }
             AST node = null;
             while (true)
@@ -433,7 +471,7 @@ namespace MiniPascal.FrontEnd.Parsing
                     break;
                 }              
             }
-            return node;
+            return this.checkStatus(node);
         }
 
         private AST term()
@@ -463,7 +501,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 nodes.Add(node);
            }
             
-            return node;
+            return this.checkStatus(node);
         }
 
         private AST factor()
@@ -483,7 +521,7 @@ namespace MiniPascal.FrontEnd.Parsing
                     this.eatToken(TokenType.LEFTBRACKET);
                     nodes.Add(this.arguments());
                     this.eatToken(TokenType.RIGHTBRACKET);
-                    return new Call(nodes);
+                    return this.checkStatus(new Call(nodes));
                 }
                 //<variable> ::= <variable id> ["["<integer expr>"]"]
               
@@ -493,39 +531,39 @@ namespace MiniPascal.FrontEnd.Parsing
                     nodes.Add(this.expr());
                     this.eatToken(TokenType.RIGHTSQUARE);
                 }
-                return new Variable(nodes, null);
+                return this.checkStatus(new Variable(nodes, null));
             }else if(type == TokenType.LEFTBRACKET)
             {
                 //<factor> ::= "(" <expr> ")"
                 this.eatToken(TokenType.LEFTBRACKET);
                 AST node = this.expr();
                 this.eatToken(TokenType.RIGHTBRACKET);
-                return node;
+                return this.checkStatus(node);
             }else if(type == TokenType.INTEGER)
             {
                 AST node = new Integer(cur);
                 this.eatToken(TokenType.INTEGER);
-                return node;
+                return this.checkStatus(node);
             }else if(type == TokenType.STRING)
             {
                 AST node = new Utils.String(cur);
                 this.eatToken(TokenType.STRING);
-                return node;
+                return this.checkStatus(node);
             }else if(type == TokenType.REAL)
             {
                 AST node = new Real(cur);
                 this.eatToken(TokenType.REAL);
-                return node;
+                return this.checkStatus(node);
             }else if(type == TokenType.NOT)
             {
                 this.eatToken(TokenType.NOT);
                 nodes.Add(this.factor());
-                return new UnaryOp(nodes, cur);
+                return this.checkStatus(new UnaryOp(nodes, cur));
             }else if(type == TokenType.BOOLEAN)
             {
                 AST node = new Utils.Boolean(cur);
                 this.eatToken(TokenType.BOOLEAN);
-                return node;
+                return this.checkStatus(node);
             }
             return null;
         }
@@ -537,7 +575,7 @@ namespace MiniPascal.FrontEnd.Parsing
             Token cur = this.currentToken;
             List<AST> nodes = new List<AST>();
             nodes.Add(this.id());
-            this.eatToken(TokenType.ID);
+            //this.eatToken(TokenType.ID);
             type = this.currentToken.type;
             if (type == TokenType.LEFTSQUARE)
             {
@@ -545,7 +583,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 nodes.Add(this.expr());
                 this.eatToken(TokenType.RIGHTSQUARE);
             }
-            return new Variable(nodes, null);
+            return this.checkStatus(new Variable(nodes, null));
         }
         
 
@@ -555,7 +593,7 @@ namespace MiniPascal.FrontEnd.Parsing
             Token cur = this.currentToken;
             this.eatToken(TokenType.ID);
             AST id = new Identifier(cur);
-            return id;
+            return this.checkStatus(id);
         }
 
        private AST arguments()
@@ -581,7 +619,7 @@ namespace MiniPascal.FrontEnd.Parsing
                 this.eatToken(TokenType.COMMA);
                 nodes.Add(this.expr());
             }
-            return new Arguments(nodes);
+            return this.checkStatus(new Arguments(nodes));
        }
 
         private AST parameters()
@@ -625,14 +663,14 @@ namespace MiniPascal.FrontEnd.Parsing
                 }
 
             }
-            return new Parameters(nodes);
+            return this.checkStatus(new Parameters(nodes));
         }
 
         
 
         public AST parse()
         {
-            return program();
+            return this.checkStatus(program());
         }
     }
 }

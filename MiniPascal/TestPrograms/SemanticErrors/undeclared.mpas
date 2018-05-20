@@ -1,0 +1,5 @@
+﻿Program undeclared;
+begin	
+	var test : Boolean;
+	variable := 1;
+end.

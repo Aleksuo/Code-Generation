@@ -55,6 +55,7 @@
     <Compile Include="ErrorHandling\Messages\IErrorMessage.cs" />
     <Compile Include="ErrorHandling\Messages\Parser\LexicalError.cs" />
     <Compile Include="ErrorHandling\Messages\Parser\SyntaxError.cs" />
+    <Compile Include="ErrorHandling\Messages\Semantics\StatementTypeError.cs" />
     <Compile Include="ErrorHandling\Messages\Semantics\TypeNotSupportedError.cs" />
     <Compile Include="ErrorHandling\Messages\Semantics\UnaryOperandTypeError.cs" />
     <Compile Include="ErrorHandling\Messages\Semantics\UndeclaredVariableError.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="FrontEnd\SemanticAnalysis\IdentifierUsageCheckingVisitor.cs" />
     <Compile Include="FrontEnd\SemanticAnalysis\SymbolTableBuildingVisitor.cs" />
     <Compile Include="FrontEnd\SemanticAnalysis\TypeCheckingVisitor.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Utils\AST.cs" />
     <Compile Include="Utils\NodeVisitor.cs" />
     <Compile Include="Utils\Source\FileSource.cs" />
@@ -81,10 +83,22 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="TestPrograms\test.mpas" />
+    <None Include="TestPrograms\Examples\example1.mpas" />
+    <None Include="TestPrograms\SemanticErrors\binaryoperror.mpas" />
+    <None Include="TestPrograms\SemanticErrors\duplicate.mpas" />
+    <None Include="TestPrograms\SemanticErrors\statementerror.mpas" />
+    <None Include="TestPrograms\SemanticErrors\unaryerror.mpas" />
+    <None Include="TestPrograms\SemanticErrors\undeclared.mpas" />
+    <None Include="TestPrograms\Examples\example2.mpas" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Output\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestPrograms\LexicalErrors\lexerror.mpas" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestPrograms\SyntaxErrors\syntaxerror.mpas" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

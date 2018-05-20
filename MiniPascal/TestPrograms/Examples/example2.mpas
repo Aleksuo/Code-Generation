@@ -1,0 +1,16 @@
+﻿Program example2;
+function add1(first : integer, second : integer) : integer;
+begin
+	return (first + second);
+end;
+
+begin
+	begin
+		var add, first, second : integer;
+		writeln("Give two numbers:");
+		read(first,Second);
+		add := add1(first,second);
+		assert(add = first + second);
+		writeln(first, "+", second, "=", add);
+	end
+end.

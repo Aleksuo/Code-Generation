@@ -17,34 +17,57 @@ namespace MiniPascal
     {
         static void Main(string[] args)
         {
-            ErrorManager em = new ErrorManager();
-            string path = "TestPrograms/test.mpas";
-            Lexer lexer = new Lexer(new FileSource(path));
-
-            Parser parser = new Parser(lexer);
-            parser.HookTo(em);
-            AST program = parser.parse();
-
-            SymbolTableBuildingVisitor tableBuilder = new SymbolTableBuildingVisitor();
-            tableBuilder.HookTo(em);
-            SymbolTableManager stm = tableBuilder.buildTables(program);
-
-            IdentifierUsageCheckingVisitor idChecker = new IdentifierUsageCheckingVisitor(stm);
-            idChecker.HookTo(em);
-            idChecker.check(program);
-
-            if (!em.areErrors())
+            try
             {
-                CodeGeneratingVisitor cgv = new CodeGeneratingVisitor(program);
-                CProgram cProgram = cgv.generate();
-                cProgram.generateFile();
+                string path;
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("Please enter a filepath: ");
+                    path = Console.ReadLine();
+                }
+                else
+                {
+                    path = args[0];
+                }
+
+                ErrorManager em = new ErrorManager();
+                Lexer lexer = new Lexer(new FileSource(path));
+
+                Parser parser = new Parser(lexer);
+                parser.HookTo(em);
+                AST program = parser.parse();
+
+                SymbolTableBuildingVisitor tableBuilder = new SymbolTableBuildingVisitor();
+                tableBuilder.HookTo(em);
+                SymbolTableManager stm = tableBuilder.buildTables(program);
+
+                IdentifierUsageCheckingVisitor idChecker = new IdentifierUsageCheckingVisitor(stm);
+                idChecker.HookTo(em);
+                idChecker.check(program);
+
+                TypeCheckingVisitor typeChecker = new TypeCheckingVisitor(stm);
+                typeChecker.HookTo(em);
+                typeChecker.check(program);
+
+                if (!em.areErrors())
+                {
+                    CodeGeneratingVisitor cgv = new CodeGeneratingVisitor(stm);
+                    CProgram cProgram = cgv.generate(program);
+                    cProgram.generateFile();
+                    Console.WriteLine("Build successful.");
+                }
+                else
+                {
+                    Console.WriteLine("Build failed.");
+                }
+
+                Console.ReadLine();
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Build failed.");
+                Console.WriteLine(ex);
+                return;
             }
-            
-            Console.ReadLine();
         }
     }
 }

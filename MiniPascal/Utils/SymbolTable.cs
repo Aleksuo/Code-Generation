@@ -8,7 +8,7 @@ namespace MiniPascal.Utils
 {
     public enum BuiltType
     {
-        INTEGER, STRING, BOOLEAN, ERROR, REAL, NONE
+        NONE,INTEGER, STRING, BOOLEAN, ERROR, REAL
     }
 
     public enum Category
@@ -53,7 +53,9 @@ namespace MiniPascal.Utils
     }
    
 
+#pragma warning disable CS0659 // 'SymbolTable' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     public class SymbolTable
+#pragma warning restore CS0659 // 'SymbolTable' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         private Dictionary<string, Symbol> symbols;
         private Dictionary<string, BuiltType> types;

@@ -59,13 +59,13 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
             int scopeLevel = this.currentTable.scopeLevel + 1;
             this.enterNewScope(scopeName, scopeLevel, node.nodeID);
             this.visitAll(node);
-            this.currentTable = this.currentTable.baseScope;
+            this.exitCurrentScope();
         }
 
         public void visit_Procedure(AST node)
         {
             string name = node.nodes[0].token.lexeme;
-            int scopeLevel = this.currentTable.scopeLevel + 1;
+            int scopeLevel = this.currentTable.scopeLevel;
             if(this.currentTable.lookup(name) == null)
             {
                 this.currentTable.define(new ProcedureSymbol(name, BuiltType.NONE, Category.PROCEDURE, this.parameterListGenerator(node)));
@@ -94,8 +94,9 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
                 this.ThrowErrorMessage(new DuplicateDeclarationError(node.nodes[0].token));
             }
             //parameters here
-            this.enterNewScope(name, this.currentTable.scopeLevel + 1, node.nodeID);
+            this.enterNewScope(name, this.currentTable.scopeLevel, node.nodeID);
             this.visit(node.nodes[3]);
+            this.exitCurrentScope();
         }
 
         private List<Symbol> parameterListGenerator(AST node)
@@ -166,13 +167,6 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
 
         public void visit_Identifier(AST node)
         {
-            /*
-            string name = node.token.lexeme;
-            if(this.currentTable.lookup(name) == null)
-            {
-                this.ThrowErrorMessage(new UndeclaredVariableError(node.token));
-            }
-            */
         }
 
         public void visit_RelationalOp(AST node)
@@ -213,6 +207,11 @@ namespace MiniPascal.FrontEnd.SemanticAnalysis
         public void visit_Assert(AST node)
         {
             visitAll(node);
+        }
+
+        public void visit_Error(AST node)
+        {
+
         }
 
         public void visit_Variable(AST node)

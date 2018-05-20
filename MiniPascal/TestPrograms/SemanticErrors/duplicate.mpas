@@ -1,0 +1,5 @@
+﻿Program duplicate;
+begin	
+	var test : Boolean;
+	var test : integer;
+end.

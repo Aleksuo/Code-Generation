@@ -44,6 +44,7 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
             this.oneCharTokens[';'] = new Token(TokenType.SEMICOLON, ";");
             this.oneCharTokens[','] = new Token(TokenType.COMMA, ",");
             this.oneCharTokens['/'] = new Token(TokenType.DIV, "/");
+            this.oneCharTokens['='] = new Token(TokenType.EQUALS, "=");
         }
 
         private void initializeKeywords()
@@ -67,7 +68,8 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
             this.keywords["read"] = new Token(TokenType.READ, "read");
             this.keywords["writeln"] = new Token(TokenType.WRITELN, "writeln");
             this.keywords["integer"] = new Token(TokenType.TYPE, "integer");
-            this.keywords["Boolean"] = new Token(TokenType.TYPE, "Boolean");
+            this.keywords["boolean"] = new Token(TokenType.TYPE, "Boolean");
+            this.keywords["string"] = new Token(TokenType.TYPE, "string");
             this.keywords["real"] = new Token(TokenType.TYPE, "real");
             this.keywords["false"] = new Token(TokenType.BOOLEAN, "false");
             this.keywords["true"] = new Token(TokenType.BOOLEAN, "true");
@@ -148,10 +150,11 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
             }
             while (Char.IsLetterOrDigit(cur) || cur == '_')
             {
-                if (this.input.currentChar() == null)
+                if (this.input.currentChar() == null || this.input.currentChar() == ';')
                     break;
                 if (Char.IsLetter(cur))
                 {
+                    break;
                     error = true;
                 }
                 cur = (char)this.input.currentChar();
@@ -185,13 +188,14 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
                 builder.Append(cur);
                 this.advance();
             }
-            if (this.keywords.ContainsKey(builder.ToString()))
+            string lower = builder.ToString().ToLower();
+            if (this.keywords.ContainsKey(lower))
             {
-                Token t = this.keywords[builder.ToString()];
+                Token t = this.keywords[lower];
                 t.pos = pos;
                 return t;
             }
-            return new Token(TokenType.ID, builder.ToString(), pos);
+            return new Token(TokenType.ID, lower, pos);
         }
 
         private Token stringLiteral()
@@ -316,7 +320,8 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
                 {
                     return stringLiteral();
                 }
-                return new Token(TokenType.ERROR, "");
+                this.advance();
+                return new Token(TokenType.ERROR, cur.ToString());
             }
             return new Token(TokenType.EOF, "eof");
             

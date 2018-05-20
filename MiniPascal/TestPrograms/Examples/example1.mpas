@@ -1,0 +1,12 @@
+﻿program example1;
+
+procedure print(stuff : string);
+begin
+	writeln(stuff);
+end;
+
+begin
+	var input : string;
+	read(input);
+	print(input);
+end.

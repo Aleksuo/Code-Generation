@@ -1,0 +1,4 @@
+﻿Program unaryerror;
+begin
+	assert(not(1+1));
+end.

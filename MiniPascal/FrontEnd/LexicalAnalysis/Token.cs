@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace MiniPascal.FrontEnd.LexicalAnalysis
 {
-#pragma warning disable CS0659 // 'Position' overrides Object.Equals(object o) but does not override Object.GetHashCode()
+
     public class Position
-#pragma warning restore CS0659 // 'Position' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         public int row;
         public int col;
@@ -34,9 +33,8 @@ namespace MiniPascal.FrontEnd.LexicalAnalysis
         }
     }
 
-#pragma warning disable CS0659 // 'Token' overrides Object.Equals(object o) but does not override Object.GetHashCode()
+
     public class Token
-#pragma warning restore CS0659 // 'Token' overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         public TokenType type;
         public string lexeme;

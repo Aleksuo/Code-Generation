@@ -176,6 +176,11 @@ namespace MiniPascal.Utils
         public Reference(List<AST> nodes) : base(nodes, null) { }
     }
 
+    public class Error : AST
+    {
+        public Error() : base(null, null) { }
+    }
+
 
 
     

@@ -1,0 +1,7 @@
+﻿Program syntaxerror;
+begin
+	
+	var test : Boolean
+	test := true;
+
+end.
